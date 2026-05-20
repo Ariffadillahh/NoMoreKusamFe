@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-// 1. Import library Compare Image
-import ReactCompareImage from 'react-compare-image';
+import React, { useState } from "react";
+import ReactCompareImage from "react-compare-image";
+import { FaDownload } from "react-icons/fa6";
 
 const App = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -8,19 +8,17 @@ const App = () => {
   const [processedImage, setProcessedImage] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // State untuk parameter (sama seperti sebelumnya)
   const [gamma, setGamma] = useState(1.2);
   const [clipLimit, setClipLimit] = useState(1.5);
   const [denoiseStrength, setDenoiseStrength] = useState(0);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
+
     if (file) {
       setSelectedFile(file);
-      // Buat URL preview untuk gambar asli
       setOriginalPreview(URL.createObjectURL(file));
-      // Reset hasil lama jika upload gambar baru
-      setProcessedImage(null); 
+      setProcessedImage(null);
     }
   };
 
@@ -31,6 +29,7 @@ const App = () => {
     }
 
     setLoading(true);
+
     const formData = new FormData();
     formData.append("file", selectedFile);
     formData.append("gamma", gamma);
@@ -38,131 +37,202 @@ const App = () => {
     formData.append("denoiseStrength", denoiseStrength);
 
     try {
-      // Pastikan URL ini sesuai backend FastAPI Anda
       const response = await fetch("http://localhost:8000/process-image/", {
         method: "POST",
         body: formData,
       });
 
       const data = await response.json();
-      // Backend mengembalikan base64 string
-      setProcessedImage(data.image_base64); 
+
+      setProcessedImage(data.image_base64);
     } catch (error) {
-      console.error("Error processing image:", error);
-      alert("Gagal memproses gambar. Pastikan backend berjalan.");
+      console.error(error);
+      alert("Backend belum berjalan!");
     } finally {
       setLoading(false);
     }
   };
 
+  const downloadImage = () => {
+    if (!processedImage) return;
+  }
+
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif', maxWidth: '1000px', margin: 'auto' }}>
-      <h2 style={{ textAlign: 'center' }}>Smart Hybrid Image Enhancer</h2>
-      
-      {/* Bagian Input File & Kontrol */}
-      <div style={{ marginBottom: '20px', display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-        
-        {/* Input File */}
-        <div style={{ flex: '1 1 300px', padding: '15px', border: '1px solid #ddd', borderRadius: '8px' }}>
-          <h4>1. Upload Foto Kusam</h4>
-          <input type="file" accept="image/*" onChange={handleFileChange} style={{ width: '100%' }} />
-          {originalPreview && (
-             <div style={{ marginTop: '10px' }}>
-               <small>File terpilih:</small>
-               {/* Preview kecil di samping input */}
-               <img src={originalPreview} alt="Thumb" style={{ width: '50px', height: '50px', objectFit: 'cover', display: 'block', marginTop: '5px', borderRadius: '4px' }} />
-             </div>
-          )}
+    <div className="min-h-screen bg-slate-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-10">
+          <h1 className="text-4xl font-bold text-slate-800">
+            Smart Hybrid Image Enhancer
+          </h1>
+
+          <p className="text-slate-500 mt-2">
+            Enhance old, blurry, and dull images using OpenCV + FastAPI
+          </p>
         </div>
 
-        {/* Slider Kontrol */}
-        <div style={{ flex: '2 1 500px', padding: '15px', background: '#f9f9f9', borderRadius: '8px', border: '1px solid #eee' }}>
-          <h4>2. Pengaturan (Adjustments)</h4>
-          
-          {/* Slider Noise */}
-          <div style={{ marginBottom: '15px' }}>
-            <label><strong>Noise Reduction:</strong> {denoiseStrength}</label>
-            <input type="range" min="0" max="20" step="1" value={denoiseStrength} onChange={(e) => setDenoiseStrength(e.target.value)} style={{ width: '100%' }}/>
-          </div>
-          
-          {/* Slider Gamma */}
-          <div style={{ marginBottom: '15px' }}>
-            <label><strong>Gamma (Brightness):</strong> {gamma}</label>
-            <input type="range" min="0.1" max="3.0" step="0.1" value={gamma} onChange={(e) => setGamma(e.target.value)} style={{ width: '100%' }}/>
+        <div className="flex flex-col lg:flex-row gap-8">
+          <div className="w-full lg:w-[350px] space-y-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+              <h2 className="text-xl font-semibold text-slate-700 mb-4">
+                Upload Image
+              </h2>
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="w-full text-sm"
+              />
+
+              {originalPreview && (
+                <div className="mt-5">
+                  <p className="text-sm text-slate-500 mb-2">Preview</p>
+
+                  <img
+                    src={originalPreview}
+                    alt="preview"
+                    className="w-24 h-24 object-cover rounded-xl border"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+              <h2 className="text-xl font-semibold text-slate-700 mb-6">
+                Adjustments
+              </h2>
+
+              <div className="mb-6">
+                <div className="flex justify-between mb-2">
+                  <label className="font-medium text-slate-600">
+                    Noise Reduction
+                  </label>
+
+                  <span className="text-slate-500">{denoiseStrength}</span>
+                </div>
+
+                <input
+                  type="range"
+                  min="0"
+                  max="20"
+                  step="1"
+                  value={denoiseStrength}
+                  onChange={(e) => setDenoiseStrength(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="mb-6">
+                <div className="flex justify-between mb-2">
+                  <label className="font-medium text-slate-600">Gamma</label>
+
+                  <span className="text-slate-500">{gamma}</span>
+                </div>
+
+                <input
+                  type="range"
+                  min="0.1"
+                  max="3"
+                  step="0.1"
+                  value={gamma}
+                  onChange={(e) => setGamma(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="mb-6">
+                <div className="flex justify-between mb-2">
+                  <label className="font-medium text-slate-600">
+                    CLAHE Sharpness
+                  </label>
+
+                  <span className="text-slate-500">{clipLimit}</span>
+                </div>
+
+                <input
+                  type="range"
+                  min="0.1"
+                  max="5"
+                  step="0.1"
+                  value={clipLimit}
+                  onChange={(e) => setClipLimit(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+
+              <button
+                onClick={processImage}
+                disabled={loading || !selectedFile}
+                className={`w-full py-3 rounded-xl font-semibold transition-all duration-300
+                ${
+                  loading || !selectedFile
+                    ? "bg-slate-300 cursor-not-allowed"
+                    : "bg-emerald-500 hover:bg-emerald-600 text-white"
+                }`}
+              >
+                {loading ? "Processing..." : "Apply Enhancement"}
+              </button>
+            </div>
           </div>
 
-          {/* Slider CLAHE */}
-          <div style={{ marginBottom: '15px' }}>
-            <label><strong>CLAHE (Sharpness):</strong> {clipLimit}</label>
-            <input type="range" min="0.1" max="5.0" step="0.1" value={clipLimit} onChange={(e) => setClipLimit(e.target.value)} style={{ width: '100%' }}/>
-          </div>
+          <div className="flex-1">
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-5">
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-2xl font-bold text-slate-700">
+                  Result Preview
+                </h2>
 
-          <button 
-            onClick={processImage} 
-            disabled={loading || !selectedFile}
-            style={{ 
-              padding: '12px 24px', width: '100%', fontSize: '16px', fontWeight: 'bold',
-              cursor: loading || !selectedFile ? 'not-allowed' : 'pointer', 
-              backgroundColor: loading ? '#ccc' : '#28a745', color: 'white', border: 'none', borderRadius: '5px', transition: 'background-color 0.3s'
-            }}
-          >
-            {loading ? "Sedang Memproses..." : "Terapkan Perubahan (Apply)"}
-          </button>
+                {processedImage && (
+                  <div className="flex gap-3 items-center">
+                    <span className="text-sm bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full">
+                      Enhanced
+                    </span>
+                    <button
+                      onClick={downloadImage}
+                      className="ml-4 bg-slate-200 hover:bg-slate-300 text-slate-700 py-2 px-4 rounded-lg transition-colors duration-300"
+                    >
+                      <FaDownload />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="relative rounded-2xl overflow-hidden bg-slate-100 min-h-[500px] flex items-center justify-center">
+                {loading && (
+                  <div className="absolute z-10 bg-white/80 backdrop-blur-sm px-5 py-3 rounded-full shadow">
+                    <p className="font-semibold text-slate-700">
+                      Processing Image...
+                    </p>
+                  </div>
+                )}
+
+                {!originalPreview && (
+                  <div className="text-center text-slate-400">
+                    <p className="text-lg">Upload image first</p>
+                  </div>
+                )}
+
+                {originalPreview && !processedImage && !loading && (
+                  <img
+                    src={originalPreview}
+                    alt="original"
+                    className="w-full h-auto object-contain"
+                  />
+                )}
+
+                {originalPreview && processedImage && !loading && (
+                  <ReactCompareImage
+                    leftImage={originalPreview}
+                    rightImage={processedImage}
+                    leftImageLabel="Before"
+                    rightImageLabel="After"
+                  />
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* ----------------------------------------------------------- */}
-      {/* AREA VISUALISASI (BEFORE-AFTER SWIPE) */}
-      {/* ----------------------------------------------------------- */}
-      <div style={{ marginTop: '30px', textAlign: 'center' }}>
-        <h3>Hasil Perbandingan (Geser Garis Tengah)</h3>
-        
-        <div style={{ 
-          maxWidth: '800px', // Batasi lebar maksimal agar tidak terlalu besar di layar lebar
-          margin: '0 auto', 
-          border: '4px solid white', 
-          borderRadius: '12px', 
-          overflow: 'hidden', // Agar gambar tidak keluar dari border radius
-          boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-          position: 'relative', // Penting untuk library
-          minHeight: '300px', // Tinggi minimal saat loading
-          background: '#eee', // Warna background saat kosong
-          display: 'flex', alignItems: 'center', justifyContent: 'center' // Centering loading text
-        }}>
-          
-          {loading && (
-             <div style={{ position: 'absolute', zIndex: 10, color: '#555', fontWeight: 'bold', background: 'rgba(255,255,255,0.8)', padding: '10px 20px', borderRadius: '20px' }}>
-               Memproses Gambar... Mohon Tunggu
-             </div>
-          )}
-
-          {!processedImage && originalPreview && (
-            // Jika belum diproses, tampilkan gambar asli saja dulu penuh
-            <img src={originalPreview} alt="Original Full" style={{ width: '100%', height: 'auto', display: 'block' }} />
-          )}
-
-          {!originalPreview && (
-             <div style={{ color: '#888', padding: '50px' }}>Foto akan muncul di sini setelah diupload</div>
-          )}
-
-          {/* JIKA SUDAH ADA HASIL, GUNAKAN LIBRARY SWIPE */}
-          {originalPreview && processedImage && !loading && (
-            <ReactCompareImage 
-              leftImage={originalPreview} // Gambar Before
-              rightImage={processedImage} // Gambar After
-              leftImageLabel="Before (Kusam)"
-              rightImageLabel="After (Enhanced)"
-              // Kustomisasi Garis & Tombol Geser (Optional)
-              sliderLineColor="#fff"
-              sliderLineWidth={3}
-              handleSize={40} // Ukuran lingkaran tombol geser
-              // Agar gambar responsif mengikuti container
-              aspectRatio="taller" // opsional: 'taller' menjaga aspek rasio berdasarkan gambar yang lebih tinggi
-            />
-          )}
-        </div>
-      </div>
-
     </div>
   );
 };
